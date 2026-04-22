@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SheSafe Pro</title>
+
+    <!-- Fonts + Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <!-- 🔝 NAVBAR -->
+    <nav class="navbar">
+        <h2>SheSafe Pro</h2>
+
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+        </div>
+    </nav>
+
+    <!-- 🚨 PANIC OVERLAY -->
+    <div id="panicOverlay" class="panic-overlay"></div>
+
+    <!-- 🚨 PANIC BUTTON -->
+    <button id="panicButton" class="panic-button">
+        SOS
+    </button>
+
+    <!-- 📍 LIVE STATUS -->
+    <div class="live-status-bar">
+        <i class="fas fa-location-dot"></i>
+        <span id="liveLocation">Detecting...</span>
+    </div>
+
+    <!-- 🔊 ALERT SOUND -->
+    <audio id="alertSound" preload="auto">
+        <source src="{{ url_for('static', filename='audio/alert.mp3') }}" type="audio/mpeg">
+    </audio>
+
+    <!-- 📄 MAIN CONTENT -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 🔌 SOCKET -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>

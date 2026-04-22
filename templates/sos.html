@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="sos-header">
+        <h1>Emergency SOS</h1>
+        <p class="sos-subtitle">Your location and emergency contacts will be notified instantly</p>
+    </div>
+
+    <!-- Current Location -->
+    <div class="location-display">
+        <div class="location-header">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Current Location</span>
+        </div>
+        <div class="location-details">
+            <div id="sosAddress">{{ address or 'Detecting...' }}</div>
+            <div class="coords">{{ lat }}, {{ lng }}</div>
+        </div>
+    </div>
+
+    <!-- Nearest Police Stations -->
+    <div class="police-stations">
+        <h3>Nearest Police Stations</h3>
+        {% if police_stations %}
+        <div class="police-list">
+            {% for station in police_stations %}
+            <div class="police-station">
+                <div class="station-name">{{ station.name }}</div>
+                <div class="station-distance">{{ station.distance }}</div>
+                <div class="station-phone">
+                    <a href="tel:{{ station.phone }}">{{ station.phone }}</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-police">Detecting police stations...</div>
+        {% endif %}
+    </div>
+
+    <!-- SOS Form -->
+    <form method="POST" class="sos-form" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Emergency Notes (Optional)</label>
+            <textarea name="notes" placeholder="Describe the situation... (e.g., 'Followed by unknown person')"></textarea>
+        </div>
+        
+        <div class="camera-preview">
+            <video id="cameraPreview" autoplay muted></video>
+            <canvas id="cameraCanvas" style="display:none;"></canvas>
+            <button type="button" id="capturePhoto" class="btn btn-secondary">
+                <i class="fas fa-camera"></i> Capture Evidence
+            </button>
+            <img id="capturedPhoto" style="display:none;" alt="Evidence Photo">
+        </div>
+
+        <!-- Big SOS Button -->
+        <button type="submit" class="sos-button">
+            <div class="sos-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="sos-text">
+                <span>SEND SOS ALERT</span>
+                <small>Emergency contacts + Police will be notified</small>
+            </div>
+        </button>
+    </form>
+
+    <!-- Emergency Numbers -->
+    <div class="emergency-numbers">
+        <h4>Emergency Contacts</h4>
+        <div class="numbers-grid">
+            <a href="tel:112" class="emergency-number police">
+                <i class="fas fa-police"></i>
+                <strong>112</strong><br>Police
+            </a>
+            <a href="tel:100" class="emergency-number police">
+                <i class="fas fa-siren"></i>
+                <strong>100</strong><br>Emergency
+            </a>
+            <a href="tel:181" class="emergency-number women">
+                <i class="fas fa-heart"></i>
+                <strong>181</strong><br>Women Helpline
+            </a>
+        </div>
+   

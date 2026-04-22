@@ -1,0 +1,138 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: #0f172a;
+    color: white;
+    overflow-x: hidden;
+}
+
+/* NAVBAR */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 30px;
+    background: rgba(0,0,0,0.7);
+}
+
+/* HERO */
+.hero-section {
+    text-align: center;
+    padding: 120px 20px;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff, red);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.hero-subtitle {
+    color: #9ca3af;
+    margin: 20px 0;
+}
+
+/* BUTTONS */
+.btn {
+    padding: 14px 28px;
+    margin: 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+    display: inline-block;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+}
+
+.btn-outline {
+    border: 1px solid rgba(255,255,255,0.5);
+}
+
+.btn:hover {
+    transform: translateY(-3px) scale(1.05);
+}
+
+/* FEATURES */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 25px;
+    padding: 60px;
+}
+
+.feature-card {
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 12px;
+    transition: 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+}
+
+/* PANIC BUTTON */
+.panic-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+
+    width: 90px;
+    height: 90px;
+
+    border-radius: 50%;
+    border: none;
+
+    background: red;
+    color: white;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 red; }
+    70% { box-shadow: 0 0 0 25px transparent; }
+}
+
+/* STATUS */
+.live-status-bar {
+    position: fixed;
+    bottom: 110px;
+    left: 20px;
+}
+
+/* TOAST */
+.toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: black;
+    padding: 12px 20px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}

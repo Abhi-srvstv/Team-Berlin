@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- History Header -->
+    <div class="history-header">
+        <div class="header-left">
+            <h1>Safety History</h1>
+            <p class="history-subtitle">
+                Complete record of all your safety alerts, check-ins, and emergency actions
+            </p>
+        </div>
+        <div class="header-right">
+            <div class="stats-summary">
+                <div class="stat">
+                    <div class="stat-number">{{ alerts|selectattr('status','equalto','active')|list|length }}</div>
+                    <div>Active Alerts</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ alerts|selectattr('status','equalto','resolved')|list|length }}</div>
+                    <div>Resolved</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ alerts|length }}</div>
+                    <div>Total Alerts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="history-filters">
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">
+                <i class="fas fa-list"></i> All ({{ alerts|length }})
+            </button>
+            <button class="filter-tab" data-filter="active">
+                <i class="fas fa-exclamation-triangle"></i> Active ({{ alerts|selectattr('status','equalto','active')|list|length }})
+            </button>
+            <button class="filter-tab" data-filter="resolved">
+                <i class="fas fa-check-circle"></i> Resolved ({{ alerts|selectattr('status','equalto','resolved')|list|length }})
+            </button>
+            <button class="filter-tab" data-filter="sos">
+                <i class="fas fa-sos"></i> SOS ({{ alerts|selectattr('alert_type','equalto','sos')|list|length }})
+            </button>
+        </div>
+        <div class="filter-search">
+            <input type="text" id="searchAlerts" placeholder="Search alerts...">
+            <button id="exportHistory" class="btn btn-secondary">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Alerts Timeline -->
+    <div class="timeline-container">
+        {% if alerts %}
+        <div class="timeline" id="alertsTimeline">
+            {% for alert in alerts %}
+            <div class="timeline-item {{ alert.status }} {{ alert.alert_type }}" 
+                 data-type="{{ alert.alert_type }}" 
+                 data-status="{{ alert.status }}"
+                 data-search="{{ alert.address|lower }} {{ alert.notes|lower }}">
+                <div class="timeline-badge">
+                    <i class="fas fa-{{ 'exclamation-triangle' if alert.status == 'active' else 'check-circle' }}"></i>
+                </div>
+                
+                <div class="timeline-content">
+                    <div class="alert-header">
+                        <div class="alert-meta">
+                            <span class="alert-type-badge {{ alert.alert_type }}">
+                                {{ alert.alert_type|upper }}
+                            </span>
+                            <span class="alert-time">
+                                {{ alert.timestamp.strftime('%d %b %Y, %H:%M') }}
+                            </span>
+                            <span class="alert-status-badge {{ alert.status }}">
+                                {{ alert.status|title }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Location & Police Info -->
+                    <div class="alert-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="location-text">{{ alert.address[:80] }}{% if alert.address|length > 80 %}...{% endif %}</span>
+                        {% if alert.police_stations %}
+                        <div class="police-info">
+                            <i class="fas fa-police"></i>
+                            {% set stations = alert.police_stations|from_json %}
+                            {{ stations[0].name if stations }} - {{ stations[0].distance if stations }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Evidence & Notes -->
+                    {% if alert.notes %}
+                    <div class="alert-notes">
+                        <i class="fas fa-sticky-note"></i>
+                        <span>{{ alert.notes }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if alert.camera_snapshot %}
+                    <div class="evidence-section">
+                        <div class="evidence-label">📸 Evidence Photo</div>
+                        <img src="data:image/jpeg;base64,{{ alert.camera_snapshot }}" 
+                             alt="Emergency Evidence" 
+                             class="evidence-photo">
+                    </div>
+                    {% endif %}
+
+                    {% if alert.voice_notes %}
+                    <div class="voice-section">
+                        <div class="voice-label">🔊 Voice Note</div>
+                        <audio controls>
+                            <source src="data:audio/wav;base64,{{ alert.voice_notes }}" type="audio/wav">
+                        </audio>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="alert-actions">
+                        {% if alert.status == 'active' %}
+                        <form method="POST" action="{{ url_for('resolve_alert', alert_id=alert.id) }}" class="inline-form">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i> Mark Resolved
+                            </button>
+                        </form>
+                        {% endif %}
+                        <button class="btn btn-outline btn-sm share-btn" onclick="shareAlert({{ alert.id }})">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="viewOnMap({{ alert.latitude }}, {{ alert.longitude }})">
+                            <i class="fas fa-map"></i> View Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-history">
+            <i class="fas fa-shield-alt fa-4x"></i>
+            <h3>No Safety Alerts Yet</h3>
+            <p>Your safety history is empty. This is great news! 🎉</p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export Safety History</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <label>
+                        <input type="radio" name="exportFormat" value="pdf" checked> PDF Report
+                    </label>
+                    <label>
+                        <input type="radio" name="exportFormat" value="csv"> CSV Data
+                    </label>
+                    <label>
+                        <input type="radio" name="exportFormat" value="json"> JSON
+                    </label>
+                </div>
+                <button id="confirmExport" class="btn btn-primary">Download Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                if (filter === 'all' || 
+                    (filter === 'active' && item.dataset.status === 'active') ||
+                    (filter === 'resolved' && item.dataset.status === 'resolved') ||
+                    (filter === 'sos' && item.dataset.type === 'sos')) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Search functionality
+    document.getElementById('searchAlerts').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            const searchable = item.dataset.search;
+            item.style.display = searchable.includes(query) ? 'flex' : 'none';
+        });
+    });
+
+    // Export modal
+    document.getElementById('exportHistory').addEventListener('click', function() {
+        document.getElementById('exportModal').style.display = 'flex';
+    });
+
+    document.querySelector('.close-modal').addEventListener('click', function() {
+        document.getElementById('exportModal').style.display = 'none';
+    });
+
+    // Close modal on outside click
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('exportModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
+
+// Share alert function
+function shareAlert(alertId) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'SheSafe Alert',
+            text: 'Check my safety alert history',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        showNotification('Link copied to clipboard!');
+    }
+}
+
+// View alert on map
+function viewOnMap(lat, lng) {
+    const url = `https://www.google.com/maps?q=${lat},${lng}`;
+    window.open(url, '_blank');
+}
+
+// Show notification
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+        ${message}
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 4000);
+}
+</script>
+{% endblock %}

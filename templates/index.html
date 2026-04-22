@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="hero-section">
+    <h1 class="hero-title">
+        Your Safety is <span class="gradient-text">One Tap Away</span>
+    </h1>
+
+    <p class="hero-subtitle">
+        Real-time tracking + SOS + Alerts
+    </p>
+
+    <div class="hero-buttons">
+        <a href="/register" class="btn btn-primary">Get Started</a>
+        <a href="/login" class="btn btn-outline">Login</a>
+    </div>
+</section>
+
+<section class="features-section">
+    <div class="features-grid">
+
+        <div class="feature-card">
+            <h3>Panic Button</h3>
+            <p>Instant SOS alert</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>GPS Tracking</h3>
+            <p>Live location sharing</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>SMS Alert</h3>
+            <p>Emergency contacts notified</p>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

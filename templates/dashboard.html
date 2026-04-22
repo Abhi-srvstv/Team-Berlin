@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="header-left">
+            <h1>Safety Dashboard</h1>
+            <p class="welcome">Stay safe, {{ current_user.name }} 👋</p>
+        </div>
+        <div class="header-right">
+            <button onclick="checkInSafe()" class="btn btn-success btn-lg">
+                <i class="fas fa-check-circle"></i> Safe Check-in
+            </button>
+        </div>
+    </div>
+
+    <!-- Live Status Cards -->
+    <div class="status-grid">
+        <div class="status-card location-card">
+            <div class="card-header">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Live Location</span>
+            </div>
+            <div class="card-body">
+                <div id="currentAddress">Detecting location...</div>
+                <div class="coords">
+                    <span id="liveLat">-</span>, <span id="liveLng">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-card alerts-card">
+            <div class="card-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Recent Alerts</span>
+            </div>
+            <div class="card-body">
+                <div class="alert-count">{{ alerts|selectattr('status','equalto','active')|list|length }}</div>
+                <small>Active emergencies</small>
+            </div>
+        </div>
+        
+        <div class="status-card police-card">
+            <div class="card-header">
+                <i class="fas fa-police"></i>
+                <span>Nearest Police</span>
+            </div>
+            <div class="card-body">
+                <div id="nearestPolice">Finding stations...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="action-grid">
+            <a href="{{ url_for('sos') }}" class="action-card sos-action">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>EMERGENCY SOS</h3>
+                <p>Send instant alert with GPS + photo</p>
+            </a>
+            <div class="action-card voice-action" onclick="toggleVoiceSOS()">
+                <i class="fas fa-microphone"></i>
+                <h3>Voice SOS</h3>
+                <p>Say "HELP" or "SOS"</p>
+                <div class="voice-indicator" id="voiceIndicator"></div>
+            </div>
+            <div class="action-card camera-action" onclick="captureEmergencyPhoto()">
+                <i class="fas fa-camera"></i>
+                <h3>Camera Evidence</h3>
+                <p>Capture & save photo</p>
+            </div>
+            <a href="{{ url_for('history') }}" class="action-card history-action">
+                <i class="fas fa-history"></i>
+                <h3>Safety History</h3>
+                <p>View all alerts</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Live Map -->
+    <div class="map-section">
+        <h3>Live Tracking Map</h3>
+        <div id="liveMap" class="map-container"></div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="alerts-section">
+        <h3>Recent Safety Alerts</h3>
+        {% if alerts %}
+        <div class="alerts-list">
+            {% for alert in alerts[:5] %}
+            <div class="alert-item {{ alert.status }}">
+                <div class="alert-header">
+                    <span class="alert-type">{{ alert.alert_type|upper }}</span>
+                    <span class="alert-time">{{ alert.timestamp.strftime('%H:%M - %d %b') }}</span>
+                </div>
+                <div class="alert-location">{{ alert.address[:60] }}{% if alert.address|length > 60 %}...{% endif %}</div>
+                {% if alert.camera_snapshot %}
+                <div class="alert-evidence">
+                    <img src="data:image/jpeg;base64,{{ alert.camera_snapshot }}" alt="Evidence" class="evidence-thumb">
+                </div>
+                {% endif %}
+                <div class="alert-status">
+                    {% if alert.status == 'active' %}
+                        <span class="status-badge active">ACTIVE</span>
+                    {% else %}
+                        <span class="status-badge resolved">RESOLVED</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-alerts">
+            <i class="fas fa-shield-alt"></i>
+            <p>No alerts yet. You're safe! ✅</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize live map
+    let map = L.map('liveMap').setView([28.6139, 77.2090], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    
+    // Update live location
+    navigator.geolocation.watchPosition((pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        L.marker([lat, lng]).addTo(map).bindPopup('You are here');
+        map.setView([lat, lng], 16);
+        document.getElementById('liveLat').textContent = lat.toFixed(6);
+        document.getElementById('liveLng').textContent = lng.toFixed(6);
+    });
+</script>
+{% endblock %}
